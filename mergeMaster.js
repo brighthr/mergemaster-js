@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 
 const merge = ({ branchToResolve, branchToMergeIn, url }) => {
     try {
-        execSync(`git checkout ${branchToResolve}`);
+        execSync(`git checkout -f ${branchToResolve}`);
         execSync(`git pull --rebase`);
         execSync(`git merge --no-commit --no-ff ${branchToMergeIn}`);
         execSync(`git add .`);

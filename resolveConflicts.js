@@ -15,7 +15,7 @@ const getListOfConflictingFiles = conflicts => {
 }
 
 const checkoutBranch = branchName => {
-    execSync(`git checkout ${branchName}`);
+    execSync(`git checkout -f ${branchName}`);
     execSync(`git pull --rebase`);
 }
 
