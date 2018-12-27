@@ -1,10 +1,13 @@
 const axios = require("axios");
+const { execSync } = require('child_process');
 const resolveConflicts = require("./resolveConflicts");
 const mergeMasterIn = require("./mergeMaster");
 
 const GITHUB_ORGANIZATION = process.env.GITHUB_ORGANIZATION;
 const GITHUB_REPO = process.env.GITHUB_REPO;
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const GIT_NAME = process.env.GIT_NAME;
+const GIT_EMAIL = process.env.GIT_EMAIL;
 const MASTER_BRANCH = process.env.MASTER_BRANCH || 'master';
 const TIMEOUT = process.env.RETRY_TIMEOUT || 5000;
 
@@ -22,6 +25,19 @@ if(!GITHUB_TOKEN) {
   console.log('GITHUB_TOKEN environment variable is not defined.');
   process.exit(1);
 }
+
+if(!GIT_EMAIL) {
+  console.log('GIT_EMAIL environment variable is not defined.');
+  process.exit(1);
+}
+
+if(!GIT_NAME) {
+  console.log('GIT_EMAIL environment variable is not defined.');
+  process.exit(1);
+}
+
+execSync(`git config --global user.email "${GIT_EMAIL}"`);
+execSync(`git config --global user.name "${GIT_NAME}"`);
 
 const GET_OPEN_PRs_QUERY = `
 {
