@@ -1,12 +1,31 @@
 const axios = require("axios");
 const resolveConflicts = require("./resolveConflicts");
-const GITHUB_ORGANIZATION = "";
-const REPO = "";
-const GITHUB_TOKEN = "";
-const TIMEOUT = 5000;
+const mergeMasterIn = require("./mergeMaster");
+
+const GITHUB_ORGANIZATION = process.env.GITHUB_ORGANIZATION;
+const GITHUB_REPO = process.env.GITHUB_REPO;
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const MASTER_BRANCH = process.env.MASTER_BRANCH || 'master';
+const TIMEOUT = process.env.RETRY_TIMEOUT || 5000;
+
+if(!GITHUB_ORGANIZATION) {
+  console.log('GITHUB_ORGANIZATION environment variable is not defined.');
+  process.exit(1);
+}
+
+if(!GITHUB_REPO) {
+  console.log('GITHUB_REPO environment variable is not defined.');
+  process.exit(1);
+}
+
+if(!GITHUB_TOKEN) {
+  console.log('GITHUB_TOKEN environment variable is not defined.');
+  process.exit(1);
+}
+
 const GET_OPEN_PRs_QUERY = `
 {
-  repository(owner: "${GITHUB_ORGANIZATION}", name: "${REPO}") {
+  repository(owner: "${GITHUB_ORGANIZATION}", name: "${GITHUB_REPO}") {
     pullRequests(last: 100, states: OPEN) {
       edges {
         node {
@@ -58,23 +77,46 @@ const resolveAll = retries => {
         return;
       }
 
+      const results = [];
+      const PRsWithoutMergeConflicts = PRs.filter(({node: PR}) => {
+        return PR.mergeable === MERGEABILITY.MERGEABLE;
+      });
+
+      PRsWithoutMergeConflicts.forEach(({ node: PR }) => {
+        console.log(`Merging master into ${PR.headRefName}`);
+        const result = mergeMasterIn({
+          branchToResolve: PR.headRefName,
+          branchToMergeIn: MASTER_BRANCH,
+          url: PR.url
+        });
+        results.push(result);
+      });
+
       const PRsWithMergeConflicts = PRs.filter(({node: PR}) => {
         return PR.mergeable === MERGEABILITY.CONFLICTING;
       });
 
-      const results = [];
+      
       if (PRsWithMergeConflicts.length) {
         PRsWithMergeConflicts.forEach(({node: PR}) => {
           console.log(`Attempting to resolve conflicts on ${PR.headRefName}`);
           const result = resolveConflicts({
             branchToResolve: PR.headRefName,
-            branchToMergeIn: "master",
+            branchToMergeIn: MASTER_BRANCH,
             url: PR.url
           });
           results.push(result);
         });
-        console.log("=== SUMMARY ===");
-        console.log(JSON.stringify(results, null, 4));
+        console.log("=== SUMMARY ===\n");
+        results.forEach(({branch, url, status, error}) => {
+          console.log(`Branch: ${branch}`);
+          console.log(`URL: ${url}`);
+          console.log(`Status: ${status}`);
+          if(error) {
+            console.log(`Error: ${error}`);
+          }
+          console.log('\n');
+        })
       } else {
         console.log("No PR that needs resolving merge conflicts.");
       }

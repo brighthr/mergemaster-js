@@ -47,7 +47,6 @@ const bail = (branchToResolve, url, err) => {
 const resolve = ({ branchToResolve, branchToMergeIn, url }) => {
     checkoutBranch(branchToResolve)
     const conflictingFiles = attemptMergeToGetListOfConflictingFiles(branchToMergeIn);
-    // TODO: if no conflicting files just merge in and push (better to do elsewhere...)
 
     const onlyPackageJSONAndLockFileConflicts = conflictingFiles.every(f => f === 'package-lock.json' || f === 'package.json');
     if (!onlyPackageJSONAndLockFileConflicts) {
@@ -68,15 +67,15 @@ const resolve = ({ branchToResolve, branchToMergeIn, url }) => {
         try {
             execSync('rm package-lock.json && rm -rf node_modules && npm i && git add package-lock.json');
         } catch (err) {
-            return bail(branchToResolve, url, err);
+            return bail(branchToResolve, url, err.stdout.toString('utf8').trim());
         }
     }
 
     try {
         execSync(`git commit -m 'resolved conflicts :wizard:'`);
-        // execSync(`git push --no-verify`);
+        execSync(`git push --no-verify`);
     } catch (err) {
-        return bail(branchToResolve, url, err);
+        return bail(branchToResolve, url, err.stdout.toString('utf8').trim());
     }
 
     console.log(`Resolved conflicts on ${branchToResolve}`);
