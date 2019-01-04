@@ -1,6 +1,6 @@
 {
   "name": "mergemaster-js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Merge latest master into open PRs. Resolves package.json and package-lock.json conflicts on GitHub PRs automatically",
   "main": "index.js",
   "scripts": {
