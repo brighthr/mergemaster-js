@@ -6,7 +6,7 @@ const merge = ({ branchToResolve, branchToMergeIn, url }) => {
         execSync(`git pull --rebase`);
         execSync(`git merge --no-commit --no-ff ${branchToMergeIn}`);
         execSync(`git add .`);
-        execSync(`git commit -m 'merge ${branchToMergeIn} in'`);
+        execSync(`git commit -m 'merge-bot merged ${branchToMergeIn} in'`);
         execSync(`git push --no-verify`);
         return {
             branch: branchToResolve,
