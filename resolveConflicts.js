@@ -72,7 +72,7 @@ const resolve = ({ branchToResolve, branchToMergeIn, url }) => {
     }
 
     try {
-        execSync(`git commit -m 'resolved conflicts :wizard:'`);
+        execSync(`git commit -m 'merge-bot resolved conflicts'`);
         execSync(`git push --no-verify`);
     } catch (err) {
         return bail(branchToResolve, url, err.stdout.toString('utf8').trim());

@@ -10,6 +10,7 @@ const GIT_NAME = process.env.GIT_NAME;
 const GIT_EMAIL = process.env.GIT_EMAIL;
 const MASTER_BRANCH = process.env.MASTER_BRANCH || 'master';
 const TIMEOUT = process.env.RETRY_TIMEOUT || 5000;
+const RESOLVE_WITHOUT_CONFLICTS = process.env.RESOLVE_WITHOUT_CONFLICTS || false;
 
 if(!GITHUB_ORGANIZATION) {
   console.log('GITHUB_ORGANIZATION environment variable is not defined.');
@@ -98,15 +99,17 @@ const resolveAll = retries => {
         return PR.mergeable === MERGEABILITY.MERGEABLE;
       });
 
-      PRsWithoutMergeConflicts.forEach(({ node: PR }) => {
-        console.log(`Merging master into ${PR.headRefName}`);
-        const result = mergeMasterIn({
-          branchToResolve: PR.headRefName,
-          branchToMergeIn: MASTER_BRANCH,
-          url: PR.url
+      if (RESOLVE_WITHOUT_CONFLICTS) {
+        PRsWithoutMergeConflicts.forEach(({ node: PR }) => {
+          console.log(`Merging master into ${PR.headRefName}`);
+          const result = mergeMasterIn({
+            branchToResolve: PR.headRefName,
+            branchToMergeIn: MASTER_BRANCH,
+            url: PR.url
+          });
+          results.push(result);
         });
-        results.push(result);
-      });
+      }
 
       const PRsWithMergeConflicts = PRs.filter(({node: PR}) => {
         return PR.mergeable === MERGEABILITY.CONFLICTING;
